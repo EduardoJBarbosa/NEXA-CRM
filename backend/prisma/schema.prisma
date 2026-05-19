@@ -1,0 +1,140 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String?
+  role      String   @default("professional")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointments Appointment[]
+  leads        Lead[]
+}
+
+model Patient {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  birthDate DateTime?
+  cpf       String?  @unique
+  leadSource String  @default("ORGANIC")
+  tags      String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  leads         Lead[]
+  appointments  Appointment[]
+  sales         Sale[]
+  interactions  Interaction[]
+
+  @@index([name])
+  @@index([email])
+}
+
+model Procedure {
+  id              String   @id @default(cuid())
+  name            String
+  category        String
+  estimatedPrice  Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  leads        Lead[]
+  appointments Appointment[]
+  sales        Sale[]
+
+  @@index([category])
+}
+
+model Lead {
+  id               String     @id @default(cuid())
+  patientId        String
+  procedureId      String
+  status           String     @default("NOVO")
+  estimatedValue   Float
+  notes            String     @default("")
+  assignedTo       String?
+  leadSource       String     @default("ORGANIC")
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  patient       Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  procedure     Procedure      @relation(fields: [procedureId], references: [id])
+  professional  User?          @relation(fields: [assignedTo], references: [id])
+  interactions  Interaction[]
+
+  @@index([status])
+  @@index([patientId])
+  @@index([procedureId])
+  @@index([assignedTo])
+}
+
+model Appointment {
+  id             String   @id @default(cuid())
+  patientId      String
+  procedureId    String
+  professionalId String
+  dateTime       DateTime
+  duration       Int
+  status         String   @default("SCHEDULED")
+  room           String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  patient      Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  procedure    Procedure  @relation(fields: [procedureId], references: [id])
+  professional User       @relation(fields: [professionalId], references: [id])
+
+  @@index([patientId])
+  @@index([professionalId])
+  @@index([dateTime])
+}
+
+model Sale {
+  id              String  @id @default(cuid())
+  patientId       String
+  procedureId     String
+  value           Float
+  paymentMethod   String  @default("CASH")
+  installments    Int     @default(1)
+  status          String  @default("PENDING")
+  paidAt          DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  patient    Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  procedure  Procedure @relation(fields: [procedureId], references: [id])
+
+  @@index([patientId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Interaction {
+  id          String   @id @default(cuid())
+  leadId      String
+  patientId   String
+  type        String   @default("NOTE")
+  description String
+  createdAt   DateTime @default(now())
+
+  lead    Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([patientId])
+}

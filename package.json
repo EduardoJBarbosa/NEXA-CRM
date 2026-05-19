@@ -1,0 +1,20 @@
+{
+  "name": "crm-clinica",
+  "version": "1.0.0",
+  "description": "CRM para clínicas de estética e odontologia",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces",
+    "build": "npm run build --workspaces",
+    "backend": "npm run dev --workspace=backend",
+    "frontend": "npm run dev --workspace=frontend"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3"
+  }
+}
