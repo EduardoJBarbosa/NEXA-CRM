@@ -12,13 +12,15 @@ datasource db {
 
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String?
-  role      String   @default("professional")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  name                  String
+  email                 String   @unique
+  password              String?
+  role                  String   @default("professional")
+  whatsappWebhookUrl    String?
+  whatsappApiToken      String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   appointments Appointment[]
   leads        Lead[]
@@ -50,6 +52,8 @@ model Procedure {
   name            String
   category        String
   estimatedPrice  Float
+  durationMin     Int      @default(30)
+  valor           Float?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

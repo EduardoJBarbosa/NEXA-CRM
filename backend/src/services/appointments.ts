@@ -38,6 +38,28 @@ export class AppointmentsService {
     })
   }
 
+  async update(id: string, data: any) {
+    // Verifica se já existe outro agendamento no mesmo horário pro mesmo profissional
+    const existingAppointment = await prisma.appointment.findFirst({
+      where: {
+        id: { not: id }, // Ignora o próprio agendamento
+        professionalId: data.professionalId,
+        dateTime: data.dateTime,
+        status: { not: 'CANCELLED' },
+      },
+    })
+
+    if (existingAppointment) {
+      throw new Error('Horário indisponível para este profissional')
+    }
+
+    return prisma.appointment.update({
+      where: { id },
+      data,
+      include: { patient: true, procedure: true, professional: true },
+    })
+  }
+
   async getByProfessionalAndDate(professionalId: string, dateStart: Date, dateEnd: Date) {
     return prisma.appointment.findMany({
       where: {

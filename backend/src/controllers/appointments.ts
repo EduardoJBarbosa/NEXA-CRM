@@ -1,6 +1,6 @@
 import { Response, Request } from 'express'
 import { AppointmentsService } from '../services/appointments.js'
-import { createAppointmentSchema } from '../schemas/index.js'
+import { createAppointmentSchema, updateAppointmentSchema } from '../schemas/index.js'
 
 const service = new AppointmentsService()
 
@@ -32,6 +32,17 @@ export class AppointmentsController {
       const validated = createAppointmentSchema.parse(req.body)
       const appointment = await service.create(validated)
       res.status(201).json(appointment)
+    } catch (error: any) {
+      res.status(400).json({ error: error.message })
+    }
+  }
+
+  static async update(req: Request, res: Response) {
+    try {
+      const { id } = req.params
+      const validated = updateAppointmentSchema.parse(req.body)
+      const appointment = await service.update(id, validated)
+      res.json(appointment)
     } catch (error: any) {
       res.status(400).json({ error: error.message })
     }

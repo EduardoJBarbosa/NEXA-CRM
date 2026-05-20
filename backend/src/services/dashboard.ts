@@ -39,7 +39,7 @@ export class DashboardService {
       totalLeadsMonth: leadsThisMonth,
       conversionRate: parseFloat(conversionRate.toFixed(2)),
       realizadoRevenue: salesThisMonth._sum.value || 0,
-      expectedRevenue: expectedRevenue._sum.value || 0,
+      expectedRevenue: expectedRevenue._sum.estimatedValue || 0,
       leadsByStage: leadsByStatus.map((g) => ({
         status: g.status,
         count: g._count,

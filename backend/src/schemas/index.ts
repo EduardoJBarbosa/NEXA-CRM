@@ -38,6 +38,8 @@ export const createAppointmentSchema = z.object({
   room: z.string().optional(),
 })
 
+export const updateAppointmentSchema = createAppointmentSchema.partial()
+
 export const createSaleSchema = z.object({
   patientId: z.string(),
   procedureId: z.string(),
