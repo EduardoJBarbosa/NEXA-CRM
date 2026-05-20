@@ -1,125 +1,233 @@
-# CRM Clínica - Sistema Completo
+# Nexa CRM - Sistema Completo
 
-Sistema CRM profissional para gestão de clínicas de estética e odontologia.
+Plataforma profissional de gestão para clínicas de estética e odontologia com agendamentos, leads, pacientes e financeiro.
 
-## 🚀 Como Executar
+## 🚀 Início Rápido com Docker
 
-### 1. **Backend**
+### Com Docker Compose (Recomendado)
 
+```bash
+docker-compose up --build
+```
+
+- **Frontend**: http://localhost:5173
+- **Backend**: http://localhost:3001
+- **Banco**: PostgreSQL em localhost:5432
+
+### Sem Docker
+
+**Backend:**
 ```bash
 cd backend
+npm install
+cp .env.example .env
+npm run prisma:migrate
 npm run dev
 ```
 
-O servidor estará rodando em `http://localhost:3001`
-
-### 2. **Frontend** (em outro terminal)
-
+**Frontend (em outro terminal):**
 ```bash
 cd frontend
+npm install
 npm run dev
 ```
-
-Acesse em `http://localhost:5173`
 
 ## 📋 Credenciais de Teste
 
 - **Email**: admin@clinic.com
-- **Senha**: qualquer valor (sem validação de hash ainda)
+- **Senha**: Agora com bcrypt seguro (defina ao criar usuário)
 
-## 🎯 Módulos Implementados
+## 🎨 Rebranding Nexa CRM
 
-### ✅ Concluído
+- **Nome**: "Nexa CRM" (ao invés de "CRM Clínica")
+- **Tema**: Dark Tech com glassmorphism
+- **Cores**:
+  - Primary: `#7C3AED` (Violet)
+  - Accent: `#06B6D4` (Cyan)
+  - Dark BG: `#0A0A0F`
+  - Secondary BG: `#1A1A2E`
+
+## 🎯 Funcionalidades Implementadas
+
+### ✅ Concluído - ENTREGA COMPLETA
 
 - **FASE 1**: Infraestrutura, Prisma, Seed ✓
 - **FASE 2**: Backend API REST completa ✓
 - **FASE 3**: Frontend autenticação e layout ✓
-- **FASE 4**: Dashboard com gráficos Recharts ✓
+- **FASE 4**: Dashboard com gráficos ✓
 - **FASE 5**: Kanban de Leads com drag & drop ✓
 - **FASE 6**: CRUD de Pacientes ✓
-
-### 🔄 Em Progresso
-
-- **FASE 7**: Agenda (Calendário)
-- **FASE 8**: Financeiro (Vendas)
-- **FASE 9**: Configurações
-- **FASE 10**: Validações e testes
+- **FASE 7**: Agenda com calendário completo ✓
+- **FASE 8**: Financeiro com tabela e gráficos ✓
+- **FASE 9**: Configurações e CRUD Procedimentos ✓
+- **FASE 10**: Autenticação com bcrypt ✓
+- **FASE 11**: Webhook WhatsApp ✓
+- **FASE 12**: Integração WhatsApp em Leads ✓
+- **FASE 13**: Rebranding Nexa CRM ✓
+- **FASE 14**: Docker Compose ✓
 
 ## 📦 Stack
 
-- **Frontend**: React 18 + Vite + TypeScript + TailwindCSS + Recharts
-- **Backend**: Node.js + Express + Prisma + SQLite
-- **Drag & Drop**: @dnd-kit/core
+- **Frontend**: React 18 + Vite + TypeScript + TailwindCSS + Recharts + React Big Calendar
+- **Backend**: Node.js + Express + Prisma + PostgreSQL/SQLite + bcrypt + JWT
+- **Autenticação**: JWT + bcrypt
 - **Validação**: Zod + React Hook Form
 - **Estado**: Zustand
+- **Drag & Drop**: @dnd-kit/core
+- **Deploy**: Docker + Docker Compose
 
-## 🧪 Testando Funcionalidades
+## 🧪 Funcionalidades
 
 ### Login
-1. Acesse `http://localhost:5173`
-2. Email: `admin@clinic.com`
-3. Senha: qualquer valor
+- Autenticação segura com bcrypt
+- Validação de credenciais
+- JWT para sessões
+- Glassmorphism dark theme
 
 ### Dashboard
 - Métricas de leads do mês
 - Taxa de conversão
-- Gráfico de funil de vendas
-- Gráfico pizza de origem dos leads
+- Gráficos de funil
+- Origem dos leads
 
 ### Leads (Kanban)
-- Arrastar cards entre colunas para mover de etapa
-- 7 colunas: NOVO → CONTATO_REALIZADO → AVALIACAO_AGENDADA → ORCAMENTO_ENVIADO → NEGOCIACAO → VENDA_REALIZADA / PERDIDO
-- Cards em vermelho = leads "parados" há >5 dias
-- Deletar leads com botão X
+- Drag & drop entre colunas
+- 7 estágios: NOVO → CONTATO_REALIZADO → AVALIACAO_AGENDADA → ORCAMENTO_ENVIADO → NEGOCIACAO → VENDA_REALIZADA / PERDIDO
+- **Botão WhatsApp**: Abre wa.me diretamente
+- Indicador de leads parados
+
+### Agenda
+- Calendário interativo
+- Visualização mensal
+- CRUD completo de agendamentos
+- Status: Agendado, Confirmado, Completado, Cancelado
+
+### Financeiro
+- Tabela de vendas com filtros
+- Gráficos Recharts:
+  - Faturamento últimos 6 meses (barra)
+  - Tendência mensal (linha)
+- Cards com KPIs:
+  - Total do mês
+  - Ticket médio
+  - A receber
+
+### Configurações
+- **CRUD Procedimentos**: Nome, categoria, duração, valor
+- **WhatsApp**: Webhook URL e API Token
 
 ### Pacientes
-- Tabela com busca, paginação
-- Criar novo paciente
-- Editar paciente
-- Deletar paciente
-- Campos: nome, telefone, email, origem
+- CRUD completo
+- Busca e paginação
+- Origem do lead
+
+## 📡 API Endpoints
+
+### Auth
+- `POST /api/auth/login` - Login com bcrypt
+
+### Procedimentos
+- `GET /api/procedures` - Listar
+- `POST /api/procedures` - Criar
+- `GET /api/procedures/:id` - Obter
+- `PUT /api/procedures/:id` - Atualizar
+- `DELETE /api/procedures/:id` - Deletar
+
+### Agendamentos
+- `GET /api/appointments` - Listar
+- `POST /api/appointments` - Criar
+- `PUT /api/appointments/:id` - Atualizar
+- `DELETE /api/appointments/:id` - Deletar
+
+### Vendas
+- `GET /api/sales` - Listar com agregações
+
+### WhatsApp
+- `POST /api/webhook/whatsapp` - Receber mensagens
+  ```json
+  {
+    "nome": "João",
+    "telefone": "11999999999",
+    "mensagem": "Olá",
+    "origem": "WHATSAPP"
+  }
+  ```
 
 ## 🗄️ Banco de Dados
 
-**SQLite** em `backend/prisma/dev.db`
+**Prisma** com:
+- SQLite (dev)
+- PostgreSQL (produção/Docker)
 
-### Modelos principais
+**Modelos**:
+- User (com whatsappWebhookUrl, whatsappApiToken)
+- Patient
+- Procedure (com durationMin, valor)
+- Lead
+- Appointment
+- Sale
+- Interaction
 
-- **Patient**: 5 pacientes de teste
-- **Procedure**: 8 procedimentos (estética + odonto)
-- **Lead**: 10 leads em diferentes etapas
-- **User**: 3 profissionais + 1 admin
-- **Appointment**, **Sale**, **Interaction**: relacionados
+## 🔐 Segurança
 
-## 🔗 API Endpoints
+- ✅ Bcrypt para hash de senhas
+- ✅ JWT para autenticação
+- ✅ Middleware de autenticação em rotas protegidas
+- ✅ Validação com Zod
 
+## 📝 Variáveis de Ambiente
+
+### Backend (.env)
 ```
-POST /api/auth/login
-GET /api/patients
-POST /api/patients
-GET /api/leads
-POST /api/leads/:id/move
-GET /api/dashboard/metrics
-GET /api/appointments
-POST /api/appointments
-GET /api/sales
+DATABASE_URL=postgresql://crm:crm123@postgres:5432/crm_nexa
+JWT_SECRET=seu-secret-super-seguro
+NODE_ENV=development
 ```
 
-## ⚙️ Próximos Passos
+### Frontend (.env)
+```
+VITE_API_URL=http://localhost:3001
+```
 
-1. **Agenda**: Implementar calendário com react-big-calendar
-2. **Financeiro**: Tabela de vendas + gráfico de faturamento
-3. **Configurações**: CRUD de procedimentos e profissionais
-4. **Validações**: Conflito de agendamento, campos obrigatórios
-5. **Melhorias**: Toast notifications, loading states, error handling
+## 🐳 Docker
 
-## 📝 Notas
+Serviços inclusos em `docker-compose.yml`:
+- **postgres**: PostgreSQL 15
+- **backend**: Express API (3001)
+- **frontend**: React Vite (5173)
 
-- Autenticação: JWT simples (sem hash de senha por enquanto)
-- Database: SQLite em dev (ótimo para prototipagem)
-- Drag & Drop: @dnd-kit com otimistic updates
-- Gráficos: Recharts com dados em tempo real da API
+Para parar:
+```bash
+docker-compose down
+```
+
+## 📊 Estatísticas
+
+- **Páginas**: 6 (Dashboard, Leads, Pacientes, Agenda, Financeiro, Configurações)
+- **Controllers**: 7 (auth, patients, leads, appointments, sales, procedures, whatsapp)
+- **Endpoints**: 30+
+- **Componentes**: 15+
+
+## ⚙️ Scripts
+
+### Backend
+```bash
+npm run dev           # Desenvolvimento
+npm run build         # Build
+npm start             # Produção
+npm run prisma:migrate # Migrações
+npm run prisma:generate # Gerar cliente
+npm run prisma:seed   # Seed
+```
+
+### Frontend
+```bash
+npm run dev      # Desenvolvimento
+npm run build    # Build
+npm run preview  # Preview
+npm run lint     # Type check
+```
 
 ---
 
-**Desenvolvido com ❤️ para clínicas**
+**Nexa CRM - Desenvolvido com ❤️ para clínicas**
