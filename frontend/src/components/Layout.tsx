@@ -1,100 +1,94 @@
 import { ReactNode, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
-import {
-  BarChart3,
-  Users,
-  Calendar,
-  DollarSign,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  Kanban,
-  Home,
-} from 'lucide-react'
+import { Menu, X, LogOut, BarChart3, Users, Calendar, DollarSign, Settings } from 'lucide-react'
+import { APP_NAME } from '@/utils/constants'
 
 interface LayoutProps {
   children: ReactNode
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
   const navigate = useNavigate()
   const { logout, user } = useAuthStore()
-  const location = useLocation()
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+
+  const menuItems = [
+    { icon: BarChart3, label: 'Dashboard', path: '/dashboard' },
+    { icon: Users, label: 'Leads', path: '/leads' },
+    { icon: Users, label: 'Pacientes', path: '/patients' },
+    { icon: Calendar, label: 'Agenda', path: '/appointments' },
+    { icon: DollarSign, label: 'Financeiro', path: '/financial' },
+    { icon: Settings, label: 'Configurações', path: '/settings' },
+  ]
 
   const handleLogout = () => {
     logout()
-    navigate('/login')
+    navigate('/login', { replace: true })
   }
 
-  const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: Home },
-    { path: '/leads', label: 'Leads', icon: Kanban },
-    { path: '/patients', label: 'Pacientes', icon: Users },
-    { path: '/appointments', label: 'Agenda', icon: Calendar },
-    { path: '/financial', label: 'Financeiro', icon: DollarSign },
-    { path: '/settings', label: 'Configurações', icon: Settings },
-  ]
-
   return (
-    <div className="flex h-screen bg-background">
-      <div
-        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}
+    <div className="flex h-screen bg-nexa-bg">
+      <aside
+        className={`fixed md:relative inset-y-0 left-0 bg-nexa-dark border-r border-white/10 transition-all duration-300 z-50 ${
+          sidebarOpen ? 'w-64' : 'w-0 md:w-20'
+        }`}
       >
-        <div className="p-4 border-b border-gray-200">
-          <h1 className={`font-bold text-primary ${sidebarOpen ? 'text-xl' : 'text-xs text-center'}`}>
-            {sidebarOpen ? 'CRM Clínica' : 'CRM'}
-          </h1>
-        </div>
+        <div className="flex flex-col h-full">
+          <div className="p-4 border-b border-white/10">
+            <div className={`text-xl font-bold bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent ${!sidebarOpen && 'hidden md:block text-center'}`}>
+              {sidebarOpen ? APP_NAME : 'N'}
+            </div>
+          </div>
 
-        <nav className="flex-1 p-4 space-y-2">
-          {navItems.map(({ path, label, icon: Icon }) => (
-            <Link
-              key={path}
-              to={path}
-              className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-                location.pathname === path
-                  ? 'bg-primary text-white'
-                  : 'text-gray-700 hover:bg-gray-100'
-              } ${!sidebarOpen && 'justify-center'}`}
-            >
-              <Icon size={20} />
-              {sidebarOpen && <span>{label}</span>}
-            </Link>
-          ))}
-        </nav>
+          <nav className="flex-1 p-4 space-y-2">
+            {menuItems.map((item) => {
+              const Icon = item.icon
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-white/10 transition-colors text-gray-300 hover:text-white"
+                >
+                  <Icon size={20} />
+                  {sidebarOpen && <span>{item.label}</span>}
+                </button>
+              )
+            })}
+          </nav>
 
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-          >
-            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col">
-        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-gray-600 font-medium">
-            {navItems.find((item) => item.path === location.pathname)?.label || 'Dashboard'}
-          </h2>
-
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user?.name}</span>
+          <div className="p-4 border-t border-white/10">
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-red-500/10 transition-colors text-red-400 hover:text-red-300"
             >
-              <LogOut size={18} />
-              <span className="text-sm">Sair</span>
+              <LogOut size={20} />
+              {sidebarOpen && <span>Sair</span>}
             </button>
           </div>
         </div>
+      </aside>
 
-        <div className="flex-1 overflow-auto p-6">{children}</div>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="bg-nexa-dark border-b border-white/10 px-6 py-4 flex items-center justify-between">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="md:hidden text-gray-400 hover:text-white"
+          >
+            {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-sm text-gray-400">Logado como</p>
+              <p className="font-medium text-white">{user?.name || 'Usuário'}</p>
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-auto p-6">
+          {children}
+        </main>
       </div>
     </div>
   )

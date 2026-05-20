@@ -1,13 +1,14 @@
 import { useDraggable } from '@dnd-kit/core'
 import { Lead } from '@/types'
-import { Trash2 } from 'lucide-react'
+import { Trash2, MessageCircle } from 'lucide-react'
 
 interface LeadCardProps {
   lead: Lead
   onDelete: (id: string) => void
+  onWhatsApp?: (phone: string) => void
 }
 
-export function LeadCard({ lead, onDelete }: LeadCardProps) {
+export function LeadCard({ lead, onDelete, onWhatsApp }: LeadCardProps) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: lead.id,
   })
@@ -37,12 +38,24 @@ export function LeadCard({ lead, onDelete }: LeadCardProps) {
         </button>
       </div>
       <p className="text-xs text-gray-600 mb-2">{lead.procedure?.name}</p>
-      <div className="flex justify-between items-center">
-        <span className="text-sm font-medium text-primary">R$ {lead.estimatedValue}</span>
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-sm font-medium text-violet-600">R$ {lead.estimatedValue}</span>
         <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
           {lead.daysOld} dias
         </span>
       </div>
+      {onWhatsApp && lead.patient?.phone && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onWhatsApp(lead.patient!.phone)
+          }}
+          className="w-full flex items-center justify-center gap-1 text-sm text-white bg-green-500 hover:bg-green-600 px-2 py-1 rounded transition-colors"
+        >
+          <MessageCircle size={14} />
+          WhatsApp
+        </button>
+      )}
       {lead.isStale && <p className="text-xs text-red-600 mt-2 font-medium">⚠️ Parado há muito tempo</p>}
     </div>
   )

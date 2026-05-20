@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -7,13 +7,19 @@ interface RouteGuardProps {
 }
 
 export default function RouteGuard({ children }: RouteGuardProps) {
-  const { isAuthenticated, loading } = useAuthStore()
+  const { isAuthenticated, token, user, initializeFromStorage } = useAuthStore()
+  const [isReady, setIsReady] = useState(false)
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-screen">Carregando...</div>
+  useEffect(() => {
+    initializeFromStorage()
+    setIsReady(true)
+  }, [])
+
+  if (!isReady) {
+    return <div className="flex items-center justify-center h-screen text-gray-400">Carregando...</div>
   }
 
-  if (!isAuthenticated) {
+  if (!token || !isAuthenticated) {
     return <Navigate to="/login" replace />
   }
 

@@ -7,11 +7,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#1E88E5',
+        primary: '#7C3AED',
+        accent: '#06B6D4',
         success: '#26A69A',
-        background: '#F8F9FA',
+        'nexa-dark': '#0A0A0F',
+        'nexa-bg': '#1A1A2E',
+        background: '#0A0A0F',
       },
     },
   },
   plugins: [],
 }
+

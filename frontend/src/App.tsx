@@ -16,7 +16,7 @@ function App() {
 
   useEffect(() => {
     initializeFromStorage()
-  }, [initializeFromStorage])
+  }, [])
 
   return (
     <BrowserRouter>

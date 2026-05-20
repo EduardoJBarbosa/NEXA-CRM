@@ -4,7 +4,7 @@ import { Lead } from '@/types'
 import { KanbanColumn } from '@/components/leads/KanbanColumn'
 import { LEAD_STATUSES } from '@/utils/constants'
 import api from '@/services/api'
-import { Loader, AlertCircle } from 'lucide-react'
+import { Loader, AlertCircle, MessageCircle } from 'lucide-react'
 
 export default function Leads() {
   const [leads, setLeads] = useState<Lead[]>([])
@@ -56,6 +56,11 @@ export default function Leads() {
     }
   }
 
+  const handleWhatsApp = (phone: string) => {
+    const whatsappUrl = `https://wa.me/55${phone.replace(/\D/g, '')}`
+    window.open(whatsappUrl, '_blank')
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -86,6 +91,7 @@ export default function Leads() {
               title={label}
               leads={leads.filter((lead) => lead.status === value)}
               onDeleteLead={handleDeleteLead}
+              onWhatsApp={handleWhatsApp}
             />
           ))}
         </div>

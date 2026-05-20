@@ -7,9 +7,10 @@ interface KanbanColumnProps {
   title: string
   leads: Lead[]
   onDeleteLead: (id: string) => void
+  onWhatsApp?: (phone: string) => void
 }
 
-export function KanbanColumn({ status, title, leads, onDeleteLead }: KanbanColumnProps) {
+export function KanbanColumn({ status, title, leads, onDeleteLead, onWhatsApp }: KanbanColumnProps) {
   const { setNodeRef } = useDroppable({
     id: status,
   })
@@ -30,7 +31,7 @@ export function KanbanColumn({ status, title, leads, onDeleteLead }: KanbanColum
         {leads.length === 0 ? (
           <p className="text-gray-400 text-sm text-center py-8">Nenhum lead</p>
         ) : (
-          leads.map((lead) => <LeadCard key={lead.id} lead={lead} onDelete={onDeleteLead} />)
+          leads.map((lead) => <LeadCard key={lead.id} lead={lead} onDelete={onDeleteLead} onWhatsApp={onWhatsApp} />)
         )}
       </div>
     </div>

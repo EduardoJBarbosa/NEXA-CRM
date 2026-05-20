@@ -24,20 +24,39 @@ export const useAuthStore = create<AuthStore>((set) => ({
   token: null,
   isAuthenticated: false,
   loading: false,
+
   setToken: (token) => {
     localStorage.setItem('token', token)
     set({ token, isAuthenticated: true })
   },
-  setUser: (user) => set({ user }),
+
+  setUser: (user) => {
+    localStorage.setItem('user', JSON.stringify(user))
+    set({ user })
+  },
+
   setAuthLoading: (loading) => set({ loading }),
+
   logout: () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('user')
     set({ token: null, user: null, isAuthenticated: false })
   },
+
   initializeFromStorage: () => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      set({ token, isAuthenticated: true })
+    try {
+      const token = localStorage.getItem('token')
+      const userJson = localStorage.getItem('user')
+      const user = userJson ? JSON.parse(userJson) : null
+
+      if (token && user) {
+        set({ token, user, isAuthenticated: true })
+      }
+    } catch (error) {
+      console.error('Erro ao inicializar autenticação:', error)
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      set({ token: null, user: null, isAuthenticated: false })
     }
   },
 }))
