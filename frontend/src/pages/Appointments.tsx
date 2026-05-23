@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Calendar, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react'
-import api from '@/services/api'
+import { Plus, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import api from '../services/api'
+// 👇 TROCA ESSA LINHA PRO TEU HOOK DE AUTH
+import { useAuthStore } from '../stores/authStore'
 
 interface Appointment {
   id: string
@@ -19,6 +21,7 @@ interface Appointment {
 }
 
 export default function Appointments() {
+  const { user } = useAuthStore() // ← PEGA O ADMIN LOGADO AQUI
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [currentDate, setCurrentDate] = useState(new Date())
   const [loading, setLoading] = useState(true)
@@ -29,12 +32,19 @@ export default function Appointments() {
   const [formData, setFormData] = useState({
     patientId: '',
     procedureId: '',
-    professionalId: 'cmpea2rqs0000ol3orb38gu8k',
+    professionalId: '',
     dateTime: '',
     duration: 30,
     status: 'SCHEDULED',
     room: '',
   })
+
+  // Seta o professionalId quando o user carregar
+  useEffect(() => {
+    if (user?.id) {
+      setFormData(prev => ({...prev, professionalId: user.id }))
+    }
+  }, [user])
 
   useEffect(() => {
     fetchAppointments()
@@ -78,10 +88,14 @@ export default function Appointments() {
         return
       }
 
+      if (!formData.professionalId) {
+        alert('Erro: Usuário não está logado. Faça login novamente.')
+        return
+      }
+
       const payload = {
-       ...formData,
+     ...formData,
         dateTime: new Date(formData.dateTime).toISOString(),
-        professionalId: "cmpea2rqs0000ol3orb38gu8k"
       }
 
       if (editingId) {
@@ -94,7 +108,7 @@ export default function Appointments() {
       setFormData({
         patientId: '',
         procedureId: '',
-        professionalId: 'cmpea2rqs0000ol3orb38gu8k',
+        professionalId: user?.id || '',
         dateTime: '',
         duration: 30,
         status: 'SCHEDULED',
@@ -190,7 +204,7 @@ export default function Appointments() {
             setFormData({
               patientId: '',
               procedureId: '',
-              professionalId: 'cmpea2rqs0000ol3orb38gu8k',
+              professionalId: user?.id || '', // ← AGORA CERTO
               dateTime: '',
               duration: 30,
               status: 'SCHEDULED',
@@ -245,9 +259,9 @@ export default function Appointments() {
                   <div className="font-bold text-gray-900 mb-1">{day}</div>
                   <div className="text-xs space-y-1">
                     {monthAppts
-                    .filter((apt) => new Date(apt.dateTime).getDate() === day)
-                    .slice(0, 2)
-                    .map((apt) => (
+                  .filter((apt) => new Date(apt.dateTime).getDate() === day)
+                  .slice(0, 2)
+                  .map((apt) => (
                         <div
                           key={apt.id}
                           className={`p-1 rounded text-xs truncate border ${getStatusColor(apt.status)}`}

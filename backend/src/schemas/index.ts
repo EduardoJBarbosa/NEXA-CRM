@@ -65,3 +65,12 @@ export const createUserSchema = z.object({
   email: z.string().email(),
   role: z.string().default('professional'),
 })
+
+export const createSubscriptionSchema = z.object({
+  planId: z.string(),
+})
+
+export const webhookSchema = z.object({
+  event: z.string(),
+  data: z.any(),
+})

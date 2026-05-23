@@ -12,9 +12,16 @@ const api: AxiosInstance = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token
+  const user = useAuthStore.getState().user
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+
+  if (user?.tenantId) {
+    config.headers['X-Tenant-Id'] = user.tenantId
+  }
+
   return config
 })
 

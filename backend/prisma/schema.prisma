@@ -6,81 +6,118 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
 }
 
 
-model User {
-  id                    String   @id @default(cuid())
-  name                  String
-  email                 String   @unique
-  password              String?
-  role                  String   @default("professional")
-  whatsappWebhookUrl    String?
-  whatsappApiToken      String?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
 
-  appointments Appointment[]
-  leads        Lead[]
-}
 
-model Patient {
-  id        String   @id @default(cuid())
-  name      String
-  phone     String
-  email     String?
-  birthDate DateTime?
-  cpf       String?  @unique
-  leadSource String  @default("ORGANIC")
-  tags      String   @default("")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Tenant {
+  id                  String        @id @default(cuid())
+  name                String
+  slug                String        @unique
+  plan                String        @default("TRIAL")
+  planExpiresAt       DateTime?
+  asaasCustomerId     String?       @unique
+  subscription        Subscription?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
+  users         User[]
+  patients      Patient[]
+  procedures    Procedure[]
   leads         Lead[]
   appointments  Appointment[]
   sales         Sale[]
   interactions  Interaction[]
+}
 
+model User {
+  id                 String   @id @default(cuid())
+  tenantId           String
+  name               String
+  email              String
+  password           String?
+  role               String   @default("professional")
+  whatsappWebhookUrl String?
+  whatsappApiToken   String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+  leads        Lead[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+}
+
+model Patient {
+  id         String    @id @default(cuid())
+  tenantId   String
+  name       String
+  phone      String
+  email      String?
+  birthDate  DateTime?
+  cpf        String?
+  status     String    @default("NOVO")
+  leadSource String    @default("ORGANICO")
+  tags       String    @default("")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  leads        Lead[]
+  appointments Appointment[]
+  sales        Sale[]
+  interactions Interaction[]
+
+  @@unique([tenantId, cpf])
+  @@index([tenantId])
   @@index([name])
   @@index([email])
 }
 
 model Procedure {
-  id              String   @id @default(cuid())
-  name            String
-  category        String
-  estimatedPrice  Float
-  durationMin     Int      @default(30)
-  valor           Float?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  tenantId       String
+  name           String
+  category       String
+  estimatedPrice Float
+  durationMin    Int      @default(30)
+  valor          Float?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   leads        Lead[]
   appointments Appointment[]
   sales        Sale[]
 
+  @@index([tenantId])
   @@index([category])
 }
 
 model Lead {
-  id               String     @id @default(cuid())
-  patientId        String
-  procedureId      String
-  status           String     @default("NOVO")
-  estimatedValue   Float
-  notes            String     @default("")
-  assignedTo       String?
-  leadSource       String     @default("ORGANIC")
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
+  id             String     @id @default(cuid())
+  tenantId       String
+  patientId      String?    @unique
+  procedureId    String?
+  procedure      Procedure? @relation(fields: [procedureId], references: [id])
+  status         String     @default("NOVO")
+  estimatedValue Float
+  notes          String     @default("")
+  assignedTo     String?
+  leadSource     String     @default("ORGANICO")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
-  patient       Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  procedure     Procedure      @relation(fields: [procedureId], references: [id])
-  professional  User?          @relation(fields: [assignedTo], references: [id])
-  interactions  Interaction[]
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patient      Patient?     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  professional User?        @relation(fields: [assignedTo], references: [id])
+  interactions Interaction[]
 
+  @@index([tenantId])
   @@index([status])
   @@index([patientId])
   @@index([procedureId])
@@ -89,6 +126,7 @@ model Lead {
 
 model Appointment {
   id             String   @id @default(cuid())
+  tenantId       String
   patientId      String
   procedureId    String
   professionalId String
@@ -99,30 +137,35 @@ model Appointment {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  patient      Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  procedure    Procedure  @relation(fields: [procedureId], references: [id])
-  professional User       @relation(fields: [professionalId], references: [id])
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patient      Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  procedure    Procedure @relation(fields: [procedureId], references: [id])
+  professional User      @relation(fields: [professionalId], references: [id])
 
+  @@index([tenantId])
   @@index([patientId])
   @@index([professionalId])
   @@index([dateTime])
 }
 
 model Sale {
-  id              String  @id @default(cuid())
-  patientId       String
-  procedureId     String
-  value           Float
-  paymentMethod   String  @default("CASH")
-  installments    Int     @default(1)
-  status          String  @default("PENDING")
-  paidAt          DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            String    @id @default(cuid())
+  tenantId      String
+  patientId     String
+  procedureId   String
+  value         Float
+  paymentMethod String    @default("CASH")
+  installments  Int       @default(1)
+  status        String    @default("PENDING")
+  paidAt        DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  patient    Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  procedure  Procedure @relation(fields: [procedureId], references: [id])
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patient   Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  procedure Procedure @relation(fields: [procedureId], references: [id])
 
+  @@index([tenantId])
   @@index([patientId])
   @@index([status])
   @@index([createdAt])
@@ -130,15 +173,49 @@ model Sale {
 
 model Interaction {
   id          String   @id @default(cuid())
+  tenantId    String
   leadId      String
   patientId   String
   type        String   @default("NOTE")
   description String
   createdAt   DateTime @default(now())
 
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   lead    Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
   patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
+  @@index([tenantId])
   @@index([leadId])
   @@index([patientId])
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  tenantId             String    @unique
+  tenant               Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  status               String    @default("TRIALING")
+  plan                 String
+  asaasSubscriptionId  String?   @unique
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  trialEnd             DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@index([status])
+}
+
+model Plan {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  price       Int
+  interval    String   @default("MONTH")
+  features    String
+  asaasPlanId String?  @unique
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active])
 }

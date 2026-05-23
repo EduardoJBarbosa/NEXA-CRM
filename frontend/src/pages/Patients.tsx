@@ -7,10 +7,18 @@ import api from '@/services/api'
 import { Loader, AlertCircle, Edit2, Trash2, Plus } from 'lucide-react'
 import { LEAD_SOURCES } from '@/utils/constants'
 
+declare const process: {
+  env: {
+    NEXT_PUBLIC_TENANT_ID?: string
+  }
+}
+
+const tenantId = process.env.NEXT_PUBLIC_TENANT_ID || ''
+
 const patientSchema = z.object({
-  name: z.string().min(3),
-  phone: z.string().min(10),
-  email: z.string().email().optional().or(z.literal('')),
+  name: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
+  phone: z.string().min(10, 'Telefone inválido'),
+  email: z.string().email('Email inválido').optional().or(z.literal('')),
   birthDate: z.string().optional().or(z.literal('')),
   cpf: z.string().optional().or(z.literal('')),
   leadSource: z.string(),
@@ -26,9 +34,9 @@ export default function Patients() {
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
 
-  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<PatientForm>({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<PatientForm>({
     resolver: zodResolver(patientSchema),
-    defaultValues: { leadSource: 'ORGANIC' },
+    defaultValues: { leadSource: 'ORGANICO' },
   })
 
   useEffect(() => {
@@ -36,45 +44,104 @@ export default function Patients() {
   }, [])
 
   const fetchPatients = async () => {
-    try {
-      setLoading(true)
-      const response = await api.get('/api/patients?limit=50')
-      setPatients(response.data.patients)
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro ao carregar pacientes')
-    } finally {
-      setLoading(false)
-    }
+  try {
+    setLoading(true)
+    const response = await api.get('/api/patients?limit=50', {
+      headers: {
+        'X-Tenant-Id': tenantId,   // aqui você coloca o ID do tenant atual
+      }
+    })
+    setPatients(response.data.patients)
+  } catch (err: any) {
+    setError(err.response?.data?.error || 'Erro ao carregar pacientes')
+  } finally {
+    setLoading(false)
   }
+}
+
 
   const onSubmit = async (data: PatientForm) => {
     try {
-      if (editingId) {
-        await api.put(`/api/patients/${editingId}`, data)
-        setPatients((prev) =>
-          prev.map((p) => (p.id === editingId ? { ...p, ...data } : p)),
-        )
-      } else {
-        const response = await api.post('/api/patients', data)
-        setPatients((prev) => [response.data, ...prev])
+      setError('')
+      
+      const payload = {
+        name: data.name,
+        phone: data.phone,
+        email: data.email || undefined,
+        birthDate: data.birthDate || undefined,
+        cpf: data.cpf || undefined,
+        leadSource: data.leadSource || 'ORGANICO',
+        tags: data.tags || undefined,
       }
 
-      setShowModal(false)
-      setEditingId(null)
-      reset()
+      let updatedPatient: Patient
+
+      if (editingId) {
+        const response = await api.put(`/api/patients/${editingId}`, payload)
+        updatedPatient = response.data.patient || response.data
+        setPatients((prev) =>
+          prev.map((p) => (p.id === editingId ? updatedPatient : p))
+        )
+      } else {
+        const response = await api.post('/api/patients', payload)
+        updatedPatient = response.data.patient || response.data
+        setPatients((prev) => [updatedPatient, ...prev])
+      }
+      
+      handleCloseModal()
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro ao salvar paciente')
+      console.error('Erro backend:', err.response?.data)
+      setError(err.response?.data?.error || err.response?.data?.message || 'Erro ao salvar paciente')
     }
   }
 
   const handleEdit = (patient: Patient) => {
-    reset(patient as PatientForm)
+    reset({
+      name: patient.name || '',
+      phone: patient.phone || '',
+      email: patient.email || '',
+      birthDate: patient.birthDate || '',
+      cpf: patient.cpf || '',
+      leadSource: patient.leadSource || 'ORGANICO',
+      tags: patient.tags || '',
+    })
     setEditingId(patient.id)
     setShowModal(true)
+    setError('')
+  }
+
+  const handleNewPatient = () => {
+    reset({
+      name: '',
+      phone: '',
+      email: '',
+      birthDate: '',
+      cpf: '',
+      leadSource: 'ORGANICO',
+      tags: '',
+    })
+    setEditingId(null)
+    setShowModal(true)
+    setError('')
+  }
+
+  const handleCloseModal = () => {
+    reset({
+      name: '',
+      phone: '',
+      email: '',
+      birthDate: '',
+      cpf: '',
+      leadSource: 'ORGANICO',
+      tags: '',
+    })
+    setShowModal(false)
+    setEditingId(null)
+    setError('')
   }
 
   const handleDeletePatient = async (id: string) => {
-    if (!confirm('Tem certeza?')) return
+    if (!confirm('Tem certeza que deseja excluir este paciente?')) return
 
     try {
       await api.delete(`/api/patients/${id}`)
@@ -97,11 +164,7 @@ export default function Patients() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Pacientes</h1>
         <button
-          onClick={() => {
-            reset()
-            setEditingId(null)
-            setShowModal(true)
-          }}
+          onClick={handleNewPatient}
           className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center gap-2"
         >
           <Plus size={18} /> Novo Paciente
@@ -154,7 +217,7 @@ export default function Patients() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">
               {editingId ? 'Editar Paciente' : 'Novo Paciente'}
@@ -180,6 +243,7 @@ export default function Patients() {
                   type="email"
                   className="w-full px-3 py-2 border rounded-lg"
                 />
+                {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>}
               </div>
 
               <div>
@@ -199,10 +263,7 @@ export default function Patients() {
               <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowModal(false)
-                    setEditingId(null)
-                  }}
+                  onClick={handleCloseModal}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   Cancelar

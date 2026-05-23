@@ -4,12 +4,15 @@ import { useAuthStore } from '@/stores/authStore'
 import RouteGuard from '@/components/RouteGuard'
 import Layout from '@/components/Layout'
 import Login from '@/pages/Login'
+import RegisterTenant from '@/pages/RegisterTenant'
 import Dashboard from '@/pages/Dashboard'
 import Leads from '@/pages/Leads'
 import Patients from '@/pages/Patients'
 import Appointments from '@/pages/Appointments'
 import Financial from '@/pages/Financial'
 import Settings from '@/pages/Settings'
+import Billing from '@/pages/Billing'
+import PlansPage from '@/pages/PlansPage'
 
 function App() {
   const { initializeFromStorage } = useAuthStore()
@@ -22,6 +25,9 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register-tenant" element={<RegisterTenant />} />
+
+        <Route path="/plans" element={<PlansPage />} />
 
         <Route
           path="/dashboard"
@@ -73,6 +79,17 @@ function App() {
             <RouteGuard>
               <Layout>
                 <Financial />
+              </Layout>
+            </RouteGuard>
+          }
+        />
+
+        <Route
+          path="/billing"
+          element={
+            <RouteGuard>
+              <Layout>
+                <Billing />
               </Layout>
             </RouteGuard>
           }
