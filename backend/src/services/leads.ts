@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '../lib/prisma'
 
 export class LeadsService {
   async getAll(page = 1, limit = 50, status?: string, search?: string, assignedTo?: string) {
@@ -48,17 +46,25 @@ export class LeadsService {
   }
 
   async update(id: string, data: any) {
-    return prisma.lead.update({
+    const current = await prisma.lead.findUnique({ where: { id } })
+    if (!current) throw new Error('Lead not found')
+
+    const updated = await prisma.lead.update({
       where: { id },
       data,
       include: { patient: true, procedure: true },
     })
+
+    // Se atualizar direto pra completo, também cria financeiro
+    await this.createSaleIfCompleted(current.status, updated)
+
+    return updated
   }
 
   async moveLead(id: string, newStatus: string) {
     const lead = await prisma.lead.findUnique({
       where: { id },
-      include: { patient: true },
+      include: { patient: true, procedure: true },
     })
 
     if (!lead) throw new Error('Lead not found')
@@ -69,9 +75,10 @@ export class LeadsService {
       include: { patient: true, procedure: true, professional: true },
     })
 
-    if (newStatus === 'ORCAMENTO_ENVIADO') {
+    if (newStatus === 'ORCAMENTO_ENVIADO' && lead.patientId) {
       await prisma.interaction.create({
         data: {
+          tenantId: lead.tenantId,
           leadId: id,
           patientId: lead.patientId,
           type: 'FOLLOW_UP',
@@ -80,7 +87,49 @@ export class LeadsService {
       })
     }
 
+    // 💰 CRIA FINANCEIRO QUANDO FECHA
+    await this.createSaleIfCompleted(lead.status, updated)
+
     return updated
+  }
+
+  private async createSaleIfCompleted(oldStatus: string, lead: any) {
+    const statusCompleto = ['PROCEDIMENTO_COMPLETO', 'GANHO', 'FECHADO', 'CONVERTIDO', 'COMPLETED']
+    
+    if (!statusCompleto.includes(lead.status)) return
+    if (statusCompleto.includes(oldStatus)) return // já era completo, não duplica
+    if (!lead.patientId || !lead.procedureId) return
+
+    const valorFinal = lead.procedure?.valor || lead.procedure?.estimatedPrice || lead.estimatedValue || 0
+    if (valorFinal <= 0) return
+
+    const startOfDay = new Date()
+    startOfDay.setHours(0, 0, 0, 0)
+
+    const existingSale = await prisma.sale.findFirst({
+      where: {
+        tenantId: lead.tenantId,
+        patientId: lead.patientId,
+        procedureId: lead.procedureId,
+        createdAt: { gte: startOfDay }
+      }
+    })
+
+    if (existingSale) return
+
+    await prisma.sale.create({
+      data: {
+        tenantId: lead.tenantId,
+        patientId: lead.patientId,
+        procedureId: lead.procedureId,
+        value: valorFinal,
+        status: 'PENDING',
+        paymentMethod: 'CASH',
+        installments: 1
+      }
+    })
+
+    console.log(`💰 Sale criado via Lead: R$ ${valorFinal} - ${lead.patient?.name || lead.patientId}`)
   }
 
   async delete(id: string) {

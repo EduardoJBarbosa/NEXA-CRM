@@ -13,7 +13,7 @@ declare const process: {
   }
 }
 
-const tenantId = process.env.NEXT_PUBLIC_TENANT_ID || ''
+const tenantId = import.meta.env.VITE_TENANT_ID || 'default'
 
 const patientSchema = z.object({
   name: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),

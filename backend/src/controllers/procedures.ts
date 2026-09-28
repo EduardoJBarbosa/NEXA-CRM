@@ -1,7 +1,6 @@
 import { Response, Request } from 'express'
-import { PrismaClient } from '@prisma/client'
+import prisma from '../lib/prisma'
 
-const prisma = new PrismaClient()
 
 export class ProceduresController {
   static async getAll(req: Request, res: Response) {

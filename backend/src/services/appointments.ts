@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '../lib/prisma'
 
 export class AppointmentsService {
   async getAll(page = 1, limit = 50, tenantId?: string, userId?: string, userRole?: string) {
@@ -135,6 +133,41 @@ export class AppointmentsService {
         where: { id: updated.patientId },
         data: { status: patientStatus },
       })
+
+      // 💰 AQUI QUE CRIA O FINANCEIRO AUTOMATICAMENTE
+      if (updated.status === 'COMPLETED' && current.status !== 'COMPLETED') {
+        const valorFinal = updated.procedure?.valor || updated.procedure?.estimatedPrice || 0
+
+        if (valorFinal > 0) {
+          // Evita duplicar se já criou hoje
+          const startOfDay = new Date()
+          startOfDay.setHours(0, 0, 0, 0)
+
+          const existingSale = await tx.sale.findFirst({
+            where: {
+              tenantId: updated.tenantId,
+              patientId: updated.patientId,
+              procedureId: updated.procedureId,
+              createdAt: { gte: startOfDay }
+            }
+          })
+
+          if (!existingSale) {
+            await tx.sale.create({
+              data: {
+                tenantId: updated.tenantId,
+                patientId: updated.patientId,
+                procedureId: updated.procedureId,
+                value: valorFinal,
+                status: 'PENDING',
+                paymentMethod: 'CASH',
+                installments: 1
+              }
+            })
+            console.log(`💰 Sale criado: R$ ${valorFinal} - ${updated.patient.name}`)
+          }
+        }
+      }
 
       return updated
     })

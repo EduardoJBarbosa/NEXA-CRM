@@ -1,13 +1,13 @@
 import { Response, Request } from 'express'
-import { PrismaClient } from '@prisma/client'
 import jwt from 'jwt-simple'
 import bcrypt from 'bcrypt'
+import prisma from '../lib/prisma'
+
 import { asaasService } from '../services/asaas.js'
 import { addDays } from 'date-fns'
 
-const prisma = new PrismaClient()
-
 export class TenantsController {
+
   static async register(req: Request, res: Response) {
     try {
       const { tenantName, tenantSlug, adminName, adminEmail, adminPassword } = req.body

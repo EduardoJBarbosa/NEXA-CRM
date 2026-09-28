@@ -1,7 +1,6 @@
 import { Response, Request } from 'express'
-import { PrismaClient } from '@prisma/client'
+import prisma from '../lib/prisma'
 
-const prisma = new PrismaClient()
 
 export class WhatsAppController {
   static async webhook(req: Request, res: Response) {

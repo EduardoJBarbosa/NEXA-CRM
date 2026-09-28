@@ -1,10 +1,9 @@
 import { Response, Request } from 'express'
-import { PrismaClient } from '@prisma/client'
+import prisma from '../lib/prisma'
 import { asaasService } from '../services/asaas.js'
 import { createSubscriptionSchema, webhookSchema } from '../schemas/index.js'
 import { addDays } from 'date-fns'
 
-const prisma = new PrismaClient()
 
 export class PaymentController {
   static async listPlans(req: Request, res: Response) {

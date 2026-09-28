@@ -1,10 +1,10 @@
 import { Response, Request } from 'express'
-import { PrismaClient } from '@prisma/client'
 import jwt from 'jwt-simple'
 import bcrypt from 'bcrypt'
-import 'dotenv/config';
+import prisma from '../lib/prisma'
 
-const prisma = new PrismaClient()
+
+
 
 
 

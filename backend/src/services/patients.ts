@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '../lib/prisma'
 
 export class PatientsService {
   async getAll(page = 1, limit = 10, search = '', tenantId?: string) {
